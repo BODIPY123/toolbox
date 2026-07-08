@@ -6,11 +6,23 @@
 <title>我的项目中心</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
+  /* 深色（默认） */
   :root {
     --bg:#0b0b14; --card:#16213e; --accent:#4cc9f0; --accent2:#b16cea;
-    --text:#e8e8f0; --muted:#9fb3d1; --border:#24304f;
+    --text:#e8e8f0; --muted:#9fb3d1; --border:#24304f; --chip:#0f1830;
+    --toolbar:#12172b; --shadow:rgba(76,201,240,.15);
   }
-  body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; min-height:100vh; }
+  /* 浅色 */
+  [data-theme="light"] {
+    --bg:#f4f6fb; --card:#ffffff; --accent:#1f8fb5; --accent2:#8a4fd6;
+    --text:#1a2233; --muted:#5c6b85; --border:#dce3ef; --chip:#eef2f9;
+    --toolbar:#ffffff; --shadow:rgba(31,143,181,.18);
+  }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; min-height:100vh; transition:background .25s,color .25s; }
+
+  /* 主题切换按钮 */
+  #themeToggle { position:fixed; top:16px; right:16px; z-index:100; background:var(--toolbar); color:var(--text); border:1px solid var(--border); padding:8px 14px; border-radius:20px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px; transition:.15s; }
+  #themeToggle:hover { border-color:var(--accent); }
 
   header { padding:44px 20px 16px; text-align:center; }
   header h1 { font-size:32px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
@@ -18,37 +30,36 @@
 
   .toolbar { max-width:1100px; margin:20px auto; padding:0 20px; display:flex; flex-direction:column; gap:16px; align-items:center; }
 
-  /* 大分类切换 */
-  .cats { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; background:#12172b; padding:6px; border-radius:30px; border:1px solid var(--border); }
+  .cats { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; background:var(--toolbar); padding:6px; border-radius:30px; border:1px solid var(--border); }
   .cat { padding:9px 20px; border-radius:24px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:15px; font-weight:600; transition:.15s; white-space:nowrap; }
   .cat:hover { color:var(--text); }
-  .cat.active { color:#0b0b14; }
+  .cat.active { color:#fff; }
 
   .search { width:100%; max-width:500px; position:relative; }
-  .search input { width:100%; padding:12px 44px 12px 16px; border-radius:24px; border:1px solid #35507a; background:#12172b; color:var(--text); font-size:15px; outline:none; }
+  .search input { width:100%; padding:12px 44px 12px 16px; border-radius:24px; border:1px solid var(--border); background:var(--toolbar); color:var(--text); font-size:15px; outline:none; }
   .search input:focus { border-color:var(--accent); }
   .search .ico { position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--muted); }
 
   .tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
-  .tag { padding:6px 14px; border-radius:16px; border:1px solid #35507a; background:transparent; color:var(--muted); cursor:pointer; font-size:13px; transition:.15s; }
+  .tag { padding:6px 14px; border-radius:16px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; font-size:13px; transition:.15s; }
   .tag:hover { border-color:var(--accent); color:var(--text); }
-  .tag.active { background:var(--accent); border-color:var(--accent); color:#0b0b14; font-weight:bold; }
+  .tag.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:bold; }
 
   .section-title { max-width:1100px; margin:28px auto 0; padding:0 20px; font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
   .section-title .line { flex:1; height:1px; background:var(--border); margin-left:6px; }
 
   .grid { max-width:1100px; margin:14px auto 40px; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px; }
 
-  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; display:flex; flex-direction:column; transition:.15s; }
-  .card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(76,201,240,.15); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; display:flex; flex-direction:column; transition:transform .15s,box-shadow .15s,border-color .15s; }
+  .card:hover { transform:translateY(-4px); box-shadow:0 8px 24px var(--shadow); }
   .thumb { height:120px; display:flex; align-items:center; justify-content:center; font-size:52px; position:relative; }
   .thumb img { width:100%; height:100%; object-fit:cover; }
-  .badge { position:absolute; top:8px; right:8px; background:rgba(0,0,0,.5); padding:2px 8px; border-radius:10px; font-size:11px; }
+  .badge { position:absolute; top:8px; right:8px; background:rgba(0,0,0,.45); padding:2px 8px; border-radius:10px; font-size:11px; }
   .body { padding:14px; flex:1; display:flex; flex-direction:column; gap:6px; }
   .body h3 { font-size:16px; }
   .body p { font-size:13px; color:var(--muted); line-height:1.5; flex:1; }
   .ctags { display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
-  .ctag { font-size:11px; padding:2px 8px; border-radius:8px; background:#0f1830; color:var(--muted); }
+  .ctag { font-size:11px; padding:2px 8px; border-radius:8px; background:var(--chip); color:var(--muted); }
 
   .empty { grid-column:1/-1; text-align:center; color:var(--muted); padding:40px; }
   footer { text-align:center; padding:20px; color:var(--muted); font-size:12px; }
@@ -56,6 +67,8 @@
 </style>
 </head>
 <body>
+<button id="themeToggle"><span id="themeIcon">🌙</span><span id="themeLabel">深色</span></button>
+
 <header>
   <h1>🚀 我的项目中心</h1>
   <p>科研工具、学习资源与自制小游戏合集，点击卡片直接使用</p>
@@ -80,13 +93,6 @@
 <script>
 /* ============================================================
    【维护区 1】分类配置
-   想新增分类，就在这里加一行，例如：
-     tools: { label:"🧰 实用工具", action:"打开", color:"#38b000", color2:"#004b23" }
-   - key    ：分类标识（项目里 category 要对应这个 key）
-   - label  ：显示名（可带 emoji）
-   - action ：卡片按钮文字（打开 / 开玩 / 阅读…）
-   - color/color2：卡片封面渐变色 + 分类主题色
-   顺序就是页面上的显示顺序。
 ============================================================ */
 const CATEGORIES = {
   work:  { label:"🛠 工作辅助", action:"打开", color:"#4cc9f0", color2:"#0f3a52" },
@@ -96,11 +102,19 @@ const CATEGORIES = {
 
 /* ============================================================
    【维护区 2】项目列表
-   新增项目就复制一段填好。category 要用上面配置里的 key。
-   cover 留空则显示 icon 的 emoji。
 ============================================================ */
 const PROJECTS = [
   // ---------- 工作辅助 ----------
+  {
+    category: "work",
+    title: "分析化学工具箱",
+    desc: "标准曲线拟合、色谱/质谱速览、光谱数据分析三合一。",
+    url: "https://bodipy123.github.io/Spectrum-analysis/",
+    icon: "🧪",
+    cover: "",
+    tags: ["数据分析", "光谱", "色谱", "科研"],
+    date: "2024-06-10"
+  },
   {
     category: "work",
     title: "荧光定量分析",
@@ -123,7 +137,6 @@ const PROJECTS = [
   },
 
   // ---------- 学习 ----------
-  // 把学习类项目放这里，示例（暂无链接可先注释）：
   // {
   //   category: "study",
   //   title: "学习项目名",
@@ -179,7 +192,7 @@ const PROJECTS = [
 
   // ↓↓↓ 复制这段添加新项目 ↓↓↓
   // {
-  //   category: "game",              // work / study / game 或你新增的分类
+  //   category: "game",
   //   title: "名称",
   //   desc: "简介",
   //   url: "https://bodipy123.github.io/xxx/",
@@ -190,7 +203,28 @@ const PROJECTS = [
   // },
 ];
 
-/* ============ 以下为渲染逻辑，一般无需修改 ============ */
+/* ============ 主题切换 ============ */
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const themeLabel = document.getElementById('themeLabel');
+function applyTheme(theme){
+  if(theme==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+    themeIcon.textContent='☀️'; themeLabel.textContent='浅色';
+  }else{
+    document.documentElement.removeAttribute('data-theme');
+    themeIcon.textContent='🌙'; themeLabel.textContent='深色';
+  }
+}
+let curTheme = localStorage.getItem('hub_theme') || 'dark';
+applyTheme(curTheme);
+themeToggle.onclick = ()=>{
+  curTheme = curTheme==='light' ? 'dark' : 'light';
+  localStorage.setItem('hub_theme', curTheme);
+  applyTheme(curTheme);
+};
+
+/* ============ 渲染逻辑 ============ */
 const catBar = document.getElementById('catBar');
 const tagBar = document.getElementById('tagBar');
 const searchInput = document.getElementById('searchInput');
@@ -202,32 +236,31 @@ let activeCat = 'all';
 let activeTag = '全部';
 let keyword = '';
 
-function catOf(key) {
-  return CATEGORIES[key] || { label:key, action:'打开', color:'#4cc9f0', color2:'#0f1830' };
-}
+function catOf(key){ return CATEGORIES[key] || { label:key, action:'打开', color:'#4cc9f0', color2:'#0f1830' }; }
 
-function renderCats() {
+function renderCats(){
   catBar.innerHTML = '';
   const list = [['all', { label:'全部' }], ...catKeys.map(k => [k, CATEGORIES[k]])];
   list.forEach(([key, info]) => {
     const btn = document.createElement('button');
     btn.className = 'cat' + (key === activeCat ? ' active' : '');
     btn.textContent = info.label;
-    if (key === activeCat) {
-      if (key === 'all') btn.style.background = 'linear-gradient(90deg,var(--accent),var(--accent2))';
-      else btn.style.background = catOf(key).color;
+    if(key === activeCat){
+      btn.style.background = key === 'all'
+        ? 'linear-gradient(90deg,var(--accent),var(--accent2))'
+        : catOf(key).color;
     }
     btn.onclick = () => { activeCat = key; activeTag = '全部'; render(); };
     catBar.appendChild(btn);
   });
 }
 
-function currentTagPool() {
+function currentTagPool(){
   const scope = activeCat === 'all' ? PROJECTS : PROJECTS.filter(p => p.category === activeCat);
   return ['全部', ...new Set(scope.flatMap(p => p.tags || []))];
 }
 
-function renderTags() {
+function renderTags(){
   tagBar.innerHTML = '';
   currentTagPool().forEach(t => {
     const btn = document.createElement('button');
@@ -238,14 +271,14 @@ function renderTags() {
   });
 }
 
-function cardHtml(p) {
+function cardHtml(p){
   const c = catOf(p.category);
   const thumb = p.cover
     ? `<img src="${p.cover}" alt="${p.title}">`
     : `<span>${p.icon || '📦'}</span>`;
   return `
     <a class="card" href="${p.url}" target="_blank" rel="noopener" style="border-color:${c.color}33">
-      <div class="thumb" style="background:linear-gradient(135deg,${c.color2},#0f1830)">
+      <div class="thumb" style="background:linear-gradient(135deg,${c.color2},var(--card))">
         ${thumb}<span class="badge" style="color:${c.color}">▶ ${c.action}</span>
       </div>
       <div class="body">
@@ -256,7 +289,7 @@ function cardHtml(p) {
     </a>`;
 }
 
-function filterList() {
+function filterList(){
   const kw = keyword.trim().toLowerCase();
   return PROJECTS.filter(p => {
     const matchCat = activeCat === 'all' || p.category === activeCat;
@@ -267,23 +300,22 @@ function filterList() {
   }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 }
 
-function render() {
+function render(){
   renderCats();
   renderTags();
   countEl.textContent = PROJECTS.length;
   const list = filterList();
 
-  if (list.length === 0) {
+  if(list.length === 0){
     content.innerHTML = '<div class="grid"><div class="empty">没有找到匹配的项目 😕</div></div>';
     return;
   }
 
-  if (activeCat === 'all') {
-    // 全部视图：按分类配置顺序分区块显示
+  if(activeCat === 'all'){
     let html = '';
     catKeys.forEach(cat => {
       const sub = list.filter(p => p.category === cat);
-      if (sub.length === 0) return;
+      if(sub.length === 0) return;
       const c = catOf(cat);
       html += `<div class="section-title" style="color:${c.color}">${c.label}<span class="line"></span></div>`;
       html += `<div class="grid">${sub.map(cardHtml).join('')}</div>`;
