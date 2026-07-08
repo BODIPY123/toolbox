@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的项目中心</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#0b0b14; --card:#16213e; --accent:#4cc9f0; --accent2:#b16cea;
+    --text:#e8e8f0; --muted:#9fb3d1; --border:#24304f;
+  }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; min-height:100vh; }
+
+  header { padding:44px 20px 16px; text-align:center; }
+  header h1 { font-size:32px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  header p { color:var(--muted); margin-top:8px; font-size:14px; }
+
+  .toolbar { max-width:1100px; margin:20px auto; padding:0 20px; display:flex; flex-direction:column; gap:16px; align-items:center; }
+
+  /* 大分类切换 */
+  .cats { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; background:#12172b; padding:6px; border-radius:30px; border:1px solid var(--border); }
+  .cat { padding:9px 20px; border-radius:24px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:15px; font-weight:600; transition:.15s; white-space:nowrap; }
+  .cat:hover { color:var(--text); }
+  .cat.active { color:#0b0b14; }
+
+  .search { width:100%; max-width:500px; position:relative; }
+  .search input { width:100%; padding:12px 44px 12px 16px; border-radius:24px; border:1px solid #35507a; background:#12172b; color:var(--text); font-size:15px; outline:none; }
+  .search input:focus { border-color:var(--accent); }
+  .search .ico { position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--muted); }
+
+  .tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .tag { padding:6px 14px; border-radius:16px; border:1px solid #35507a; background:transparent; color:var(--muted); cursor:pointer; font-size:13px; transition:.15s; }
+  .tag:hover { border-color:var(--accent); color:var(--text); }
+  .tag.active { background:var(--accent); border-color:var(--accent); color:#0b0b14; font-weight:bold; }
+
+  .section-title { max-width:1100px; margin:28px auto 0; padding:0 20px; font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .section-title .line { flex:1; height:1px; background:var(--border); margin-left:6px; }
+
+  .grid { max-width:1100px; margin:14px auto 40px; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px; }
+
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; display:flex; flex-direction:column; transition:.15s; }
+  .card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(76,201,240,.15); }
+  .thumb { height:120px; display:flex; align-items:center; justify-content:center; font-size:52px; position:relative; }
+  .thumb img { width:100%; height:100%; object-fit:cover; }
+  .badge { position:absolute; top:8px; right:8px; background:rgba(0,0,0,.5); padding:2px 8px; border-radius:10px; font-size:11px; }
+  .body { padding:14px; flex:1; display:flex; flex-direction:column; gap:6px; }
+  .body h3 { font-size:16px; }
+  .body p { font-size:13px; color:var(--muted); line-height:1.5; flex:1; }
+  .ctags { display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
+  .ctag { font-size:11px; padding:2px 8px; border-radius:8px; background:#0f1830; color:var(--muted); }
+
+  .empty { grid-column:1/-1; text-align:center; color:var(--muted); padding:40px; }
+  footer { text-align:center; padding:20px; color:var(--muted); font-size:12px; }
+  footer a { color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🚀 我的项目中心</h1>
+  <p>科研工具、学习资源与自制小游戏合集，点击卡片直接使用</p>
+</header>
+
+<div class="toolbar">
+  <div class="cats" id="catBar"></div>
+  <div class="search">
+    <input id="searchInput" type="text" placeholder="搜索名称、描述、标签…" autocomplete="off">
+    <span class="ico">🔍</span>
+  </div>
+  <div class="tags" id="tagBar"></div>
+</div>
+
+<div id="content"></div>
+
+<footer>
+  共 <span id="count">0</span> 个项目 · 用 ❤ 制作 ·
+  <a href="https://github.com/bodipy123" target="_blank">GitHub</a>
+</footer>
+
+<script>
+/* ============================================================
+   【维护区 1】分类配置
+   想新增分类，就在这里加一行，例如：
+     tools: { label:"🧰 实用工具", action:"打开", color:"#38b000", color2:"#004b23" }
+   - key    ：分类标识（项目里 category 要对应这个 key）
+   - label  ：显示名（可带 emoji）
+   - action ：卡片按钮文字（打开 / 开玩 / 阅读…）
+   - color/color2：卡片封面渐变色 + 分类主题色
+   顺序就是页面上的显示顺序。
+============================================================ */
+const CATEGORIES = {
+  work:  { label:"🛠 工作辅助", action:"打开", color:"#4cc9f0", color2:"#0f3a52" },
+  study: { label:"📚 学习",     action:"学习", color:"#ffb703", color2:"#4a3a0f" },
+  game:  { label:"🎮 游戏",     action:"开玩", color:"#b16cea", color2:"#2a1b4a" },
+};
+
+/* ============================================================
+   【维护区 2】项目列表
+   新增项目就复制一段填好。category 要用上面配置里的 key。
+   cover 留空则显示 icon 的 emoji。
+============================================================ */
+const PROJECTS = [
+  // ---------- 工作辅助 ----------
+  {
+    category: "work",
+    title: "荧光定量分析",
+    desc: "荧光信号定量计算与数据处理工具。",
+    url: "https://bodipy123.github.io/fluorescence-quant/",
+    icon: "🔬",
+    cover: "",
+    tags: ["数据分析", "荧光", "科研"],
+    date: "2024-06-01"
+  },
+  {
+    category: "work",
+    title: "糖链组织分布",
+    desc: "糖链在组织中的分布可视化与分析。",
+    url: "https://bodipy123.github.io/Glycan-tissue-distribution/",
+    icon: "🧬",
+    cover: "",
+    tags: ["可视化", "糖生物学", "科研"],
+    date: "2024-06-02"
+  },
+
+  // ---------- 学习 ----------
+  // 把学习类项目放这里，示例（暂无链接可先注释）：
+  // {
+  //   category: "study",
+  //   title: "学习项目名",
+  //   desc: "简介。",
+  //   url: "https://bodipy123.github.io/xxx/",
+  //   icon: "📖",
+  //   cover: "",
+  //   tags: ["笔记", "复习"],
+  //   date: "2024-06-10"
+  // },
+
+  // ---------- 游戏 ----------
+  {
+    category: "game",
+    title: "抽奖模拟",
+    desc: "随机抽奖小游戏，试试你的手气。",
+    url: "https://bodipy123.github.io/-lottery/",
+    icon: "🎰",
+    cover: "",
+    tags: ["休闲", "随机"],
+    date: "2024-05-20"
+  },
+  {
+    category: "game",
+    title: "股神模拟器",
+    desc: "模拟炒股，低买高卖体验股市沉浮。",
+    url: "https://bodipy123.github.io/Stock-God-Simulator/",
+    icon: "📈",
+    cover: "",
+    tags: ["模拟", "经营"],
+    date: "2024-05-25"
+  },
+  {
+    category: "game",
+    title: "Roguelike RPG",
+    desc: "随机地牢探索，每局都是新冒险。",
+    url: "https://bodipy123.github.io/Roguelike-rpg/",
+    icon: "⚔️",
+    cover: "",
+    tags: ["RPG", "Roguelike", "冒险"],
+    date: "2024-05-28"
+  },
+  {
+    category: "game",
+    title: "吸血鬼幸存者 Mini",
+    desc: "自动攻击割草生存，升级选强化挑战Boss。",
+    url: "https://bodipy123.github.io/Vampire-Survivors-like/",
+    icon: "🧛",
+    cover: "",
+    tags: ["动作", "生存", "手机可玩"],
+    date: "2024-06-05"
+  },
+
+  // ↓↓↓ 复制这段添加新项目 ↓↓↓
+  // {
+  //   category: "game",              // work / study / game 或你新增的分类
+  //   title: "名称",
+  //   desc: "简介",
+  //   url: "https://bodipy123.github.io/xxx/",
+  //   icon: "🎯",
+  //   cover: "",
+  //   tags: ["标签1", "标签2"],
+  //   date: "2024-06-10"
+  // },
+];
+
+/* ============ 以下为渲染逻辑，一般无需修改 ============ */
+const catBar = document.getElementById('catBar');
+const tagBar = document.getElementById('tagBar');
+const searchInput = document.getElementById('searchInput');
+const content = document.getElementById('content');
+const countEl = document.getElementById('count');
+
+const catKeys = Object.keys(CATEGORIES);
+let activeCat = 'all';
+let activeTag = '全部';
+let keyword = '';
+
+function catOf(key) {
+  return CATEGORIES[key] || { label:key, action:'打开', color:'#4cc9f0', color2:'#0f1830' };
+}
+
+function renderCats() {
+  catBar.innerHTML = '';
+  const list = [['all', { label:'全部' }], ...catKeys.map(k => [k, CATEGORIES[k]])];
+  list.forEach(([key, info]) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat' + (key === activeCat ? ' active' : '');
+    btn.textContent = info.label;
+    if (key === activeCat) {
+      if (key === 'all') btn.style.background = 'linear-gradient(90deg,var(--accent),var(--accent2))';
+      else btn.style.background = catOf(key).color;
+    }
+    btn.onclick = () => { activeCat = key; activeTag = '全部'; render(); };
+    catBar.appendChild(btn);
+  });
+}
+
+function currentTagPool() {
+  const scope = activeCat === 'all' ? PROJECTS : PROJECTS.filter(p => p.category === activeCat);
+  return ['全部', ...new Set(scope.flatMap(p => p.tags || []))];
+}
+
+function renderTags() {
+  tagBar.innerHTML = '';
+  currentTagPool().forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tag' + (t === activeTag ? ' active' : '');
+    btn.textContent = t;
+    btn.onclick = () => { activeTag = t; render(); };
+    tagBar.appendChild(btn);
+  });
+}
+
+function cardHtml(p) {
+  const c = catOf(p.category);
+  const thumb = p.cover
+    ? `<img src="${p.cover}" alt="${p.title}">`
+    : `<span>${p.icon || '📦'}</span>`;
+  return `
+    <a class="card" href="${p.url}" target="_blank" rel="noopener" style="border-color:${c.color}33">
+      <div class="thumb" style="background:linear-gradient(135deg,${c.color2},#0f1830)">
+        ${thumb}<span class="badge" style="color:${c.color}">▶ ${c.action}</span>
+      </div>
+      <div class="body">
+        <h3>${p.title}</h3>
+        <p>${p.desc || ''}</p>
+        <div class="ctags">${(p.tags || []).map(t => `<span class="ctag">${t}</span>`).join('')}</div>
+      </div>
+    </a>`;
+}
+
+function filterList() {
+  const kw = keyword.trim().toLowerCase();
+  return PROJECTS.filter(p => {
+    const matchCat = activeCat === 'all' || p.category === activeCat;
+    const matchTag = activeTag === '全部' || (p.tags || []).includes(activeTag);
+    const hay = (p.title + ' ' + p.desc + ' ' + (p.tags || []).join(' ')).toLowerCase();
+    const matchKw = !kw || hay.includes(kw);
+    return matchCat && matchTag && matchKw;
+  }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+}
+
+function render() {
+  renderCats();
+  renderTags();
+  countEl.textContent = PROJECTS.length;
+  const list = filterList();
+
+  if (list.length === 0) {
+    content.innerHTML = '<div class="grid"><div class="empty">没有找到匹配的项目 😕</div></div>';
+    return;
+  }
+
+  if (activeCat === 'all') {
+    // 全部视图：按分类配置顺序分区块显示
+    let html = '';
+    catKeys.forEach(cat => {
+      const sub = list.filter(p => p.category === cat);
+      if (sub.length === 0) return;
+      const c = catOf(cat);
+      html += `<div class="section-title" style="color:${c.color}">${c.label}<span class="line"></span></div>`;
+      html += `<div class="grid">${sub.map(cardHtml).join('')}</div>`;
+    });
+    content.innerHTML = html;
+  } else {
+    content.innerHTML = `<div class="grid">${list.map(cardHtml).join('')}</div>`;
+  }
+}
+
+searchInput.addEventListener('input', e => { keyword = e.target.value; render(); });
+
+render();
+</script>
+</body>
+</html>
